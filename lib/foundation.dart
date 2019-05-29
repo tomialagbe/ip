@@ -17,4 +17,4 @@ class Protocol {
   const Protocol(this.name, {this.packetFactory, this.ipProtocolNumber});
 }
 
-typedef Packet PacketFactory();
+typedef PacketFactory = Packet Function();
