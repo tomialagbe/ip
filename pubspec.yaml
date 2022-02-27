@@ -1,5 +1,4 @@
 name: ip
-version: 0.2.0
 author: terrier989 <terrier989@gmail.com>
 homepage: https://github.com/gohilla/dart-ip
 description: A package for working with the IP protocol stack (IPv4, IPv6, ICMP, TCP, UDP).
@@ -9,7 +8,8 @@ environment:
 
 dependencies:
   meta: ^1.3.0
-  raw: ^0.2.1
+  raw:
+    git: git@github.com:tomialagbe/raw.git
 
 dev_dependencies:
   pedantic: ^1.11.0
