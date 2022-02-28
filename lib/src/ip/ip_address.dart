@@ -2,7 +2,7 @@ import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 
 /// Superclass of [Ip4Address] and [Ip6Address].
-abstract class IpAddress extends SelfEncoder {
+abstract class IpAddress extends RawEncodable {
   const IpAddress();
 
   /// Inspects whether the address is IPv4 address or IPv6 mapping of IPv4

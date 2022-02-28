@@ -23,25 +23,25 @@ class IcmpPacket extends Packet {
   int type = 0;
   int code = 0;
   int restOfHeader = 0;
-  SelfEncoder payload = RawData.empty;
+  RawEncodable payload = RawData.empty;
 
   @override
-  void decodeSelf(RawReader reader) {
+  void decodeRaw(RawReader reader) {
     type = reader.readUint8();
     code = reader.readUint8();
     reader.readUint16(); // Ignore checksum
     restOfHeader = reader.readUint32();
-    payload = RawData.decode(reader, reader.availableLengthInBytes);
+    payload = RawData.decode(reader, reader.availableLength);
   }
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     final start = writer.length;
     writer.writeUint8(type);
     writer.writeUint8(code);
     writer.writeUint16(0);
     writer.writeUint32(restOfHeader);
-    payload.encodeSelf(writer);
+    payload.encodeRaw(writer);
     final checksum = Ip4Packet.calculateChecksum(
         writer.bufferAsByteData, start, writer.length);
     writer.bufferAsByteData.setUint16(start + 2, checksum);

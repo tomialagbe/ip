@@ -2,7 +2,6 @@ import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 import 'package:raw/raw.dart';
 
-import 'ip6_address.dart';
 
 const Protocol ipv6 = Protocol("IPv6");
 
@@ -33,7 +32,7 @@ class Ip6Packet extends IpPacket<Ip6Address> {
   int get ipVersion => 6;
 
   @override
-  set payload(SelfEncoder value) {
+  set payload(RawEncodable value) {
     if (value is IpPayload) {
       payloadProtocolNumber = value.ipProtocolNumber;
     }
@@ -58,7 +57,7 @@ class Ip6Packet extends IpPacket<Ip6Address> {
   }
 
   @override
-  void decodeSelf(RawReader reader) {
+  void decodeRaw(RawReader reader) {
     // 4-byte span at index 0
     _v0 = reader.readUint32();
 
@@ -79,7 +78,7 @@ class Ip6Packet extends IpPacket<Ip6Address> {
 
     // Payload
     final payloadLength = _v1 >> 16;
-    SelfEncoder? payload;
+    RawEncodable? payload;
     final protocol = ipProtocolMap[payloadProtocolNumber];
     if (protocol != null) {
       final packetFactory = protocol.packetFactory;
@@ -88,7 +87,7 @@ class Ip6Packet extends IpPacket<Ip6Address> {
         if (packet is IpPayload) {
           packet.parentPacket = this;
         }
-        packet.decodeSelf(reader);
+        packet.decodeRaw(reader);
         payload = packet;
       }
     }
@@ -97,10 +96,10 @@ class Ip6Packet extends IpPacket<Ip6Address> {
   }
 
   @override
-  int encodeSelfCapacity() => 40 + payload.encodeSelfCapacity();
+  int encodeRawCapacity() => 40 + payload.encodeRawCapacity();
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     final start = writer.length;
 
     // 4-byte span at index 0
@@ -112,10 +111,10 @@ class Ip6Packet extends IpPacket<Ip6Address> {
     writer.writeUint32(_v1);
 
     // 16-byte source IP address
-    source.encodeSelf(writer);
+    source.encodeRaw(writer);
 
     // 16-byte destination IP address
-    destination.encodeSelf(writer);
+    destination.encodeRaw(writer);
 
     // Payload
     final startOfPayload = writer.length;
@@ -124,12 +123,12 @@ class Ip6Packet extends IpPacket<Ip6Address> {
       final oldParentPacket = payload.parentPacket;
       try {
         payload.parentPacket = this;
-        payload.encodeSelf(writer);
+        payload.encodeRaw(writer);
       } finally {
         payload.parentPacket = oldParentPacket;
       }
     } else {
-      payload.encodeSelf(writer);
+      payload.encodeRaw(writer);
     }
     final payloadLength = writer.length - startOfPayload;
     if (payloadLength >> 16 != 0) {

@@ -2,8 +2,6 @@ import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 import 'package:raw/raw.dart';
 
-import 'ip_address.dart';
-
 /// Superclass of [Ip4Packet] and [Ip6Packet].
 abstract class IpPacket<T extends IpAddress> extends Packet {
   /// Source IP address.
@@ -14,7 +12,7 @@ abstract class IpPacket<T extends IpAddress> extends Packet {
 
   IpPacket(this.source, this.destination);
 
-  SelfEncoder payload = RawData.empty;
+  RawEncodable payload = RawData.empty;
 
   /// IP version (4 or 6)
   int get ipVersion;
@@ -28,11 +26,11 @@ abstract class IpPacket<T extends IpAddress> extends Packet {
     switch (version) {
       case 4:
         final result = Ip4Packet();
-        result.decodeSelf(reader);
+        result.decodeRaw(reader);
         return result;
       case 6:
         final result = Ip6Packet();
-        result.decodeSelf(reader);
+        result.decodeRaw(reader);
         return result;
       default:
         throw ArgumentError("Invalid IP version number");

@@ -42,7 +42,7 @@ class TcpPacket extends IpPayload {
 
   ByteData optionsByteData = ByteData(0);
 
-  SelfEncoder payload = RawData.empty;
+  RawEncodable payload = RawData.empty;
 
   TcpPacket();
 
@@ -223,7 +223,7 @@ class TcpPacket extends IpPayload {
   }
 
   @override
-  void decodeSelf(RawReader reader) {
+  void decodeRaw(RawReader reader) {
     // 4-byte span at index 0
     _v0 = reader.readUint32();
 
@@ -251,24 +251,24 @@ class TcpPacket extends IpPayload {
 
     // Payload
     // Length is not determined by the header
-    final payloadLength = reader.availableLengthInBytes;
+    final payloadLength = reader.availableLength;
     payload = RawData.decode(reader, payloadLength);
   }
 
   @override
-  int encodeSelfCapacity() {
+  int encodeRawCapacity() {
     var optionsLength = optionsByteData.lengthInBytes;
     while (optionsLength % 4 != 0) {
       optionsLength++;
     }
     var n = 20;
     n += optionsLength;
-    n += payload.encodeSelfCapacity();
+    n += payload.encodeRawCapacity();
     return n;
   }
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     final start = writer.length;
     if (parentPacket == null) {
       throw StateError(
@@ -309,7 +309,7 @@ class TcpPacket extends IpPayload {
     writer.bufferAsByteData.setUint32(start + 12, v3);
 
     // Payload
-    payload.encodeSelf(writer);
+    payload.encodeRaw(writer);
 
     // ------------
     // Set checksum

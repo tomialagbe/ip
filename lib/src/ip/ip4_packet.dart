@@ -19,7 +19,7 @@ class Ip4Packet extends IpPacket<Ip4Address> {
   int _v2 = 0;
 
   /// IPv4 options. Maximum length is 40 bytes.
-  SelfEncoder options = RawData.empty;
+  RawEncodable options = RawData.empty;
 
   /// 3-bit flags.
   int get flags => extractUint32Bits(_v1, 13, 0x3);
@@ -46,7 +46,7 @@ class Ip4Packet extends IpPacket<Ip4Address> {
   int get ipVersion => 4;
 
   @override
-  set payload(SelfEncoder value) {
+  set payload(RawEncodable value) {
     if (value is IpPayload) {
       payloadProtocolNumber = value.ipProtocolNumber;
     }
@@ -78,7 +78,7 @@ class Ip4Packet extends IpPacket<Ip4Address> {
   }
 
   @override
-  void decodeSelf(RawReader reader) {
+  void decodeRaw(RawReader reader) {
     // 4-byte span at index 0
     final v0 = reader.readUint32();
     _v0 = v0;
@@ -116,7 +116,7 @@ class Ip4Packet extends IpPacket<Ip4Address> {
 
     // Payload
     final payloadLength = 0xFFFF & _v0;
-    SelfEncoder? payload;
+    RawEncodable? payload;
     final protocol = ipProtocolMap[payloadProtocolNumber];
     if (protocol != null) {
       final packetFactory = protocol.packetFactory;
@@ -125,7 +125,7 @@ class Ip4Packet extends IpPacket<Ip4Address> {
         if (packet is IpPayload) {
           packet.parentPacket = this;
         }
-        packet.decodeSelf(reader.readRawReader(payloadLength));
+        packet.decodeRaw(reader.readRawReader(payloadLength));
         payload = packet;
       }
     }
@@ -134,16 +134,16 @@ class Ip4Packet extends IpPacket<Ip4Address> {
   }
 
   @override
-  int encodeSelfCapacity() {
-    var optionsLength = options.encodeSelfCapacity();
+  int encodeRawCapacity() {
+    var optionsLength = options.encodeRawCapacity();
     while (optionsLength % 4 != 0) {
       optionsLength++;
     }
-    return 20 + optionsLength + payload.encodeSelfCapacity();
+    return 20 + optionsLength + payload.encodeRawCapacity();
   }
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     final startOfHeader = writer.length;
 
     // 4-byte span at index 0 will be filled in the end
@@ -157,13 +157,13 @@ class Ip4Packet extends IpPacket<Ip4Address> {
     writer.writeUint32(transformUint32Bits(_v2, 0, 0xFFFF, 0));
 
     // 4-byte source address at index 12
-    source.encodeSelf(writer);
+    source.encodeRaw(writer);
 
     // 4-byte destination address at index 16
-    destination.encodeSelf(writer);
+    destination.encodeRaw(writer);
 
     // Options
-    options.encodeSelf(writer);
+    options.encodeRaw(writer);
 
     // Calculate header length
     var headerLength = writer.length - startOfHeader;
@@ -186,12 +186,12 @@ class Ip4Packet extends IpPacket<Ip4Address> {
       final oldParentPacket = payload.parentPacket;
       try {
         payload.parentPacket = this;
-        payload.encodeSelf(writer);
+        payload.encodeRaw(writer);
       } finally {
         payload.parentPacket = oldParentPacket;
       }
     } else {
-      payload.encodeSelf(writer);
+      payload.encodeRaw(writer);
     }
     final payloadLength = writer.length - startOfPayload;
     if (payloadLength >> 16 != 0) {

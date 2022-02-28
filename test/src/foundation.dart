@@ -35,16 +35,16 @@ void main() {
   });
 }
 
-class _ExampleStructWriter extends SelfEncoder {
+class _ExampleStructWriter extends RawEncodable {
   final List<int> bytes;
 
   _ExampleStructWriter(this.bytes);
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     writer.writeBytes(bytes);
   }
 
   @override
-  int encodeSelfCapacity() => bytes.length;
+  int encodeRawCapacity() => bytes.length;
 }

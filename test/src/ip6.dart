@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 import 'package:ip/udp.dart';
 import 'package:raw/raw.dart';
@@ -13,7 +12,7 @@ void main() {
       test("'0123:4567:89ab:cdef:0123:4567:89ab:cdef'", () {
         final actual =
             Ip6Address.parse("0123:4567:89ab:cdef:0123:4567:89ab:cdef")
-                .toImmutableBytes();
+                .toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expected[0] = 0x01;
         expected[1] = 0x23;
@@ -35,27 +34,27 @@ void main() {
       });
 
       test("'::'", () {
-        final actual = Ip6Address.parse("::").toImmutableBytes();
+        final actual = Ip6Address.parse("::").toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expect(actual, orderedEquals(expected));
       });
 
       test("'1::'", () {
-        final actual = Ip6Address.parse("1::").toImmutableBytes();
+        final actual = Ip6Address.parse("1::").toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expected[1] = 1;
         expect(actual, orderedEquals(expected));
       });
 
       test("'::1'", () {
-        final actual = Ip6Address.parse("::1").toImmutableBytes();
+        final actual = Ip6Address.parse("::1").toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expected[15] = 1;
         expect(actual, orderedEquals(expected));
       });
 
       test("'abcd:ef01::'", () {
-        final actual = Ip6Address.parse("abcd:ef01::").toImmutableBytes();
+        final actual = Ip6Address.parse("abcd:ef01::").toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expected[0] = 0xAB;
         expected[1] = 0xCD;
@@ -65,7 +64,7 @@ void main() {
       });
 
       test("'::abcd:ef01'", () {
-        final actual = Ip6Address.parse("::abcd:ef01").toImmutableBytes();
+        final actual = Ip6Address.parse("::abcd:ef01").toUint8ListViewOrCopy();
         final expected = Uint8List(16);
         expected[12] = 0xAB;
         expected[13] = 0xCD;
@@ -122,15 +121,15 @@ void main() {
       final example = Ip6Packet();
       test("encode, decode", () {
         // Test that this doesn't throw
-        final bytes = example.toImmutableBytes();
+        final bytes = example.toUint8ListViewOrCopy();
 
         // Test reading written default bytes
         final decoded = Ip6Packet();
-        decoded.decodeSelf(RawReader.withBytes(bytes));
+        decoded.decodeRaw(RawReader.withBytes(bytes));
 
         // Test equality
-        expect(decoded.toImmutableBytes(),
-            orderedEquals(example.toImmutableBytes()));
+        expect(decoded.toUint8ListViewOrCopy(),
+            orderedEquals(example.toUint8ListViewOrCopy()));
         expect(decoded, equals(example));
       });
     });
@@ -144,11 +143,11 @@ void main() {
       expect(example.payloadProtocolNumber, ipProtocolUdp);
 
       // Test that this doesn't throw
-      final encoded = example.toImmutableBytes();
+      final encoded = example.toUint8ListViewOrCopy();
 
       // Test reading written default bytes
       final decoded = Ip6Packet();
-      decoded.decodeSelf(RawReader.withBytes(encoded));
+      decoded.decodeRaw(RawReader.withBytes(encoded));
 
       // Test equality
       expect(decoded, selfEncoderEquals(example));
@@ -238,35 +237,35 @@ void main() {
 
       test("encode, decode, encode", () {
         // encode
-        final writer = RawWriter.withCapacity(500);
-        example.encodeSelf(writer);
-        final encoded = writer.toUint8ListView();
+        final writer = RawWriter(capacity: 500);
+        example.encodeRaw(writer);
+        final encoded = writer.toUint8List();
         expect(encoded, byteListEquals(exampleBytes));
         final encodedReader = RawReader.withBytes(encoded);
 
         // encode -> decode
         final decoded = Ip6Packet();
-        decoded.decodeSelf(encodedReader);
+        decoded.decodeRaw(encodedReader);
 
         // encode -> decode -> encode
         // (the next two lines should both encode)
-        expect(decoded.toImmutableBytes(), byteListEquals(exampleBytes));
+        expect(decoded.toUint8ListViewOrCopy(), byteListEquals(exampleBytes));
         expect(decoded, selfEncoderEquals(example));
-        expect(encodedReader.availableLengthInBytes, 0);
+        expect(encodedReader.availableLength, 0);
       });
 
       test("decode", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = Ip6Packet();
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded, selfEncoderEquals(example));
-        expect(reader.availableLengthInBytes, 0);
+        expect(reader.availableLength, 0);
       });
 
       test("decoded properties", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = Ip6Packet();
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded.ipVersion, equals(6));
         expect(decoded.trafficClass, equals(0xFE));
         expect(decoded.flowLabel, equals(0x10203));

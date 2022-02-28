@@ -18,7 +18,7 @@ class UdpPacket extends IpPayload {
   int sourcePort = 0;
 
   /// UDP packet payload.
-  SelfEncoder payload = RawData.empty;
+  RawEncodable payload = RawData.empty;
 
   UdpPacket();
 
@@ -52,7 +52,7 @@ class UdpPacket extends IpPayload {
   }
 
   @override
-  void decodeSelf(RawReader reader) {
+  void decodeRaw(RawReader reader) {
     // 16-bit source port
     sourcePort = reader.readUint16();
 
@@ -70,10 +70,10 @@ class UdpPacket extends IpPayload {
   }
 
   @override
-  int encodeSelfCapacity() => 8 + payload.encodeSelfCapacity();
+  int encodeRawCapacity() => 8 + payload.encodeRawCapacity();
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     // ----------------------------
     // Check that we have IP packet
     // ----------------------------
@@ -105,7 +105,7 @@ class UdpPacket extends IpPayload {
     // Payload
     // -------
     final payloadStart = writer.length;
-    payload.encodeSelf(writer);
+    payload.encodeRaw(writer);
     final payloadLength = writer.length - payloadStart;
 
     // Set payload length

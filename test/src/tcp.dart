@@ -1,4 +1,3 @@
-import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 import 'package:ip/tcp.dart';
 import 'package:raw/raw.dart';
@@ -20,12 +19,12 @@ void main() {
       example.parentPacket = Ip4Packet();
 
       test("encode, decode", () {
-        final reader = RawReader.withBytes(example.toImmutableBytes());
+        final reader = RawReader.withBytes(example.toUint8ListViewOrCopy());
         final decoded = TcpPacket();
         decoded.parentPacket = example.parentPacket;
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded, selfEncoderEquals(example));
-        expect(reader.availableLengthInBytes, 0);
+        expect(reader.availableLength, 0);
       });
     });
 
@@ -99,37 +98,37 @@ void main() {
       test("encode, decode, encode", () {
         // encode
         // (to middle of the buffer)
-        final writer = RawWriter.withCapacity(500);
-        example.encodeSelf(writer);
-        final encoded = writer.toUint8ListView();
+        final writer = RawWriter(capacity: 500);
+        example.encodeRaw(writer);
+        final encoded = writer.toUint8List();
         expect(encoded, byteListEquals(exampleBytes));
         final encodedReader = RawReader.withBytes(encoded);
 
         // encode -> decode
         final decoded = TcpPacket();
         decoded.parentPacket = example.parentPacket;
-        decoded.decodeSelf(encodedReader);
+        decoded.decodeRaw(encodedReader);
 
         // encode -> decode -> encode
         // (the next two lines should both encode)
-        expect(decoded.toImmutableBytes(), byteListEquals(exampleBytes));
+        expect(decoded.toByteDataViewOrCopy(), byteListEquals(exampleBytes));
         expect(decoded, selfEncoderEquals(example));
-        expect(encodedReader.availableLengthInBytes, 0);
+        expect(encodedReader.availableLength, 0);
       });
 
       test("decode", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = TcpPacket();
         decoded.parentPacket = example.parentPacket;
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded, selfEncoderEquals(example));
-        expect(reader.availableLengthInBytes, 0);
+        expect(reader.availableLength, 0);
       });
 
       test("decoded properties", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = TcpPacket();
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded.sourcePort, equals(0xFEDC));
         expect(decoded.destinationPort, equals(0xBA98));
         expect(decoded.sequenceNumber, equals(0x76543210));

@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 import 'package:ip/udp.dart';
 import 'package:raw/raw.dart';
@@ -12,7 +11,7 @@ void main() {
     test("parse", () {
       final address = Ip4Address.parse("255.254.253.252");
       expect(
-        address.toImmutableBytes(),
+        address.toUint8ListViewOrCopy(),
         orderedEquals([255, 254, 253, 252]),
       );
     });
@@ -43,11 +42,11 @@ void main() {
       final example = Ip4Packet();
       test("encode, decode", () {
         // Test that this doesn't throw
-        final bytes = example.toImmutableBytes();
+        final bytes = example.toUint8ListViewOrCopy();
 
         // Test reading written default bytes
         final decoded = Ip4Packet();
-        decoded.decodeSelf(RawReader.withBytes(bytes));
+        decoded.decodeRaw(RawReader.withBytes(bytes));
 
         // Test equality
         expect(decoded, selfEncoderEquals(example));
@@ -63,11 +62,11 @@ void main() {
       expect(example.payloadProtocolNumber, ipProtocolUdp);
 
       // Test that this doesn't throw
-      final encoded = example.toImmutableBytes();
+      final encoded = example.toUint8ListViewOrCopy();
 
       // Test reading written default bytes
       final decoded = Ip4Packet();
-      decoded.decodeSelf(RawReader.withBytes(encoded));
+      decoded.decodeRaw(RawReader.withBytes(encoded));
 
       // Test equality
       expect(decoded, selfEncoderEquals(example));
@@ -128,35 +127,35 @@ void main() {
 
       test("encode, decode, encode", () {
         // encode
-        final writer = RawWriter.withCapacity(500);
-        example.encodeSelf(writer);
-        final encoded = writer.toUint8ListView();
+        final writer = RawWriter(capacity: 500);
+        example.encodeRaw(writer);
+        final encoded = writer.toUint8List();
         expect(encoded, byteListEquals(exampleBytes));
         final encodedReader = RawReader.withBytes(encoded);
 
         // encode -> decode
         final decoded = Ip4Packet();
-        decoded.decodeSelf(encodedReader);
+        decoded.decodeRaw(encodedReader);
 
         // encode -> decode -> encode
         // (the next two lines should both encode)
-        expect(decoded.toImmutableBytes(), byteListEquals(exampleBytes));
+        expect(decoded.toUint8ListViewOrCopy(), byteListEquals(exampleBytes));
         expect(decoded, selfEncoderEquals(example));
-        expect(encodedReader.availableLengthInBytes, 0);
+        expect(encodedReader.availableLength, 0);
       });
 
       test("decode", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = Ip4Packet();
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded, selfEncoderEquals(example));
-        expect(reader.availableLengthInBytes, 0);
+        expect(reader.availableLength, 0);
       });
 
       test("decoded properties", () {
         final reader = RawReader.withBytes(exampleBytes);
         final decoded = Ip4Packet();
-        decoded.decodeSelf(reader);
+        decoded.decodeRaw(reader);
         expect(decoded.ipVersion, equals(4));
         expect(decoded.typeOfService, equals(0));
         expect(decoded.identification, equals(0));

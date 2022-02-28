@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 
-import 'ip6_packet.dart';
-
 class Ip6Address extends IpAddress {
   static final Ip6Address any = zero;
   static final Ip6Address zero = Ip6Address.parse("::");
@@ -32,10 +30,10 @@ class Ip6Address extends IpAddress {
   }
 
   @override
-  int encodeSelfCapacity() => 16;
+  int encodeRawCapacity() => 16;
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     // 4-byte span at index 0
     writer.writeUint32(v0);
 
@@ -73,7 +71,7 @@ class Ip6Address extends IpAddress {
     // ---------------------------
     // Find longest span of zeroes
     // ---------------------------
-    final bytes = this.toImmutableBytes();
+    final bytes = this.toUint8ListViewOrCopy();
 
     // Longest seen span
     int? longestStart;

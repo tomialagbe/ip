@@ -1,7 +1,6 @@
 import 'package:ip/foundation.dart';
 import 'package:ip/ip.dart';
 
-import 'ip4_packet.dart';
 
 class Ip4Address extends IpAddress {
   static final Ip4Address any = zero;
@@ -21,13 +20,13 @@ class Ip4Address extends IpAddress {
   }
 
   @override
-  int encodeSelfCapacity() => 4;
+  int encodeRawCapacity() => 4;
 
   /// Returns address as a 32-bit unsigned internet.
   final int asUint32;
 
   @override
-  void encodeSelf(RawWriter writer) {
+  void encodeRaw(RawWriter writer) {
     writer.writeUint32(asUint32);
   }
 
@@ -56,7 +55,7 @@ class Ip4Address extends IpAddress {
   Protocol get protocol => ipv4;
 
   @override
-  String toString() => toImmutableBytes().join(".");
+  String toString() => toUint8ListViewOrCopy().join(".");
 
   static Ip4Address parse(String s) {
     final bytes = s.split(".").map((number) => int.parse(number)).toList();

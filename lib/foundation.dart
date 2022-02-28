@@ -3,9 +3,9 @@ library ip.foundation;
 import 'package:raw/raw.dart';
 
 export 'package:raw/raw.dart'
-    show SelfEncoder, SelfDecoder, RawWriter, RawReader;
+    show RawEncodable, RawDecodable, RawWriter, RawReader;
 
-abstract class Packet extends SelfCodec {
+abstract class Packet extends RawValue {
   Protocol get protocol;
 }
 
